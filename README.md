@@ -1,29 +1,35 @@
 # UCSB
 README for mutation_saturation.py 
+
 Owner: Ada Madejska, UCSB, J.Rothman's lab 2019
 
 Description:
+
 	This program can be used for looking for SNPs frequency across multiple organisms
 	of the same species. It creates a graph of specified region from the genome and 
 	looks at the frequency at which the nucleotides differ from the reference at each
 	position. Lastly, it creates a VCF file with all viable mutations. 
 
 Input:
+
 	Sorted and indexed BAM file (1) with all sequenced and aligned genomes for study
 	Sorted and indexed FASTA reference file with which the BAM files were aligned.
 	Start and end position (soon to be discontinued and replaced by the chromosome number).
 
 Output:
+
 	A graph showing the fractions of mutations happening at each position in the 
 	specified regions.
 	List of genes affected by the most frequent SNPs with number of mutations.
 	A file with viable mutations in a VCF (Variant Calling Format) format. 
 
 How to use it:
+
 	python mutation_saturations.py -bam sorted_bam.bam -ref sorted_ref.fa -s start_pos
 	-e end_pos -chr chromosome_number
 
 How it works:
+
 	mutation_saturation.py takes the sorted and indexed BAM file and goes through 
 	the specified region of the chromosome (or the whole chromosome later in the 
 	development). It counts all of the datapoints it gets from all of the reads 
@@ -52,16 +58,21 @@ How it works:
 	program-generated VCF file. 
 
 Notes:
+
 	Multiple concerns about the logic and execution of the program has been discussed
 	and resolved. 
+	
 	1. Bell curved shaped mutation frequencies.
+	
 		Without accounting for the mapping quality of the reads and overall quality of the alignment,
 		the graphs of mutations frequencies has shown a very distinct bell-shaped curves.
 		This problem has been resolved by stringent quality control of the data.
 		Many reads are being discarded if their mapping quality is low (less than 40).
 		Many basepair alignment are being discarded if their individual quality score is low. 
 		Additionally, we are not counting any 'N' nucleotides in the mutation frequency.
+		
 	2. The amount of reads per position in the chromosome after the quality control.
+	
 		After we discard a lot of low quality nucleotides and reads, how much is left? 
 		Is there enough to make the mutation data believable? If the total number of data points
 		for the particular position is only 1 or 2, a simple sequencing error might show 100% 
@@ -71,7 +82,9 @@ Notes:
 		this position defaults to 0% mutation frequency. 
 		Additionally, the program outputs into the console the average amount of data points
 		for each position so the user can decide if they believe the analysis. 
+		
 	3. Transitions vs transversions. Why is it importnat?
+	
 		You can divide nucleotides ATCG into two big groups : purines (structure has two rings) 
 		(A and G) and pyrimidines (structure has only one ring) (T and C). Transitions are interchanges
 		of the two ring structure into a one ring structure and vice versa. Transversions are 
