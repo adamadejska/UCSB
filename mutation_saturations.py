@@ -72,13 +72,14 @@ def find_saturation(bam, ref, start, end, chrom):
 			if positions[i] >= end or positions[i] < start:
 				break
 
-			# read.get_reference_positions for some reason starts from 0 rather than 1. 
-			if positions[i]+1 not in mutations:
+			# Positions start at index 0 which is fine since reference also starts at 0.
+			# Position number will be incremented for VCF file creation. 
+			if positions[i] not in mutations:
 				atcg = {'A': 0, 'T':0, 'C':0, 'G':0}
 				atcg[sequence[i]] += 1
-				mutations[positions[i]+1] = atcg
+				mutations[positions[i]] = atcg
 			else:				
-				mutations[positions[i]+1][sequence[i]] += 1
+				mutations[positions[i]][sequence[i]] += 1
 
 	bamfile.close()	
 
@@ -176,7 +177,8 @@ def calculate_fractions_overall(mutations, fastafile, chrom):
 					if float(v)/sum(mutations[position].values()) > 0.05:
 						# VCF format for printing:
 						# CHROM POS     ID        REF ALT 
-						f.write('%s %d C.E.0%d %s %s %f\n' %(chrom, position, position, ref_n, k, mutation_fraction*100))
+						# read.get_reference_positions for some reason starts from 0 rather than 1. 
+						f.write('%s %d C.E.0%d %s %s %f\n' %(chrom, position+1, position+1, ref_n, k, mutation_fraction*100))
 		
 		mutations[position] = mutation_fraction
 
