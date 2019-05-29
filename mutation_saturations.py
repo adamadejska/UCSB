@@ -69,15 +69,16 @@ def find_saturation(bam, ref, start, end, chrom):
 				continue
 
 			# Make sure that we compute just the specified region.
-			if positions[i] > end or positions[i] < start:
+			if positions[i] >= end or positions[i] < start:
 				break
 
-			if positions[i] not in mutations:
+			# read.get_reference_positions for some reason starts from 0 rather than 1. 
+			if positions[i]+1 not in mutations:
 				atcg = {'A': 0, 'T':0, 'C':0, 'G':0}
 				atcg[sequence[i]] += 1
-				mutations[positions[i]] = atcg
+				mutations[positions[i]+1] = atcg
 			else:				
-				mutations[positions[i]][sequence[i]] += 1
+				mutations[positions[i]+1][sequence[i]] += 1
 
 	bamfile.close()	
 
@@ -166,7 +167,7 @@ def calculate_fractions_overall(mutations, fastafile, chrom):
 			continue
 
 		# Tell me the position of the mutation that had about 50% rate. 
-		if mutation_fraction > 0.4 and mutation_fraction < 0.6:
+		if mutation_fraction > 0.35 and mutation_fraction < 0.6:
 			positions.append(position)
 
 			# Create a VCF file of the viable mutations.
