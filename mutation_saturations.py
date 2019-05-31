@@ -214,17 +214,19 @@ def vcf_analysis(vcf):
 					key = alt + '-' + ref
 				mutations[key] += 1
 
-	# Print out the analysis 
-	# TODO: save the analysis to a separate file. 
-	print('Transitions    Occurence number    Percentage')
-	print('A-G    %d     %f' %(mutations['A-G'], float(mutations['A-G'])/sum(mutations.values())))
-	print('C-T    %d     %f' %(mutations['C-T'], float(mutations['C-T'])/sum(mutations.values())))
-	print('\n\nTransversions  Occurence number    Percentage')
-	print('A-C    %d     %f' %(mutations['A-C'], float(mutations['A-C'])/sum(mutations.values())))
-	print('A-T    %d     %f' %(mutations['A-T'], float(mutations['A-T'])/sum(mutations.values())))
-	print('C-G    %d     %f' %(mutations['C-G'], float(mutations['C-G'])/sum(mutations.values())))
-	print('G-T    %d     %f' %(mutations['G-T'], float(mutations['G-T'])/sum(mutations.values())))
-
+	total = sum(mutations.values())
+	if total:
+		# Print out the analysis 
+		print('Transitions    Occurence number    Percentage')
+		print('A-G    %d     %f' %(mutations['A-G'], float(mutations['A-G'])/sum(mutations.values())))
+		print('C-T    %d     %f' %(mutations['C-T'], float(mutations['C-T'])/sum(mutations.values())))
+		print('\n\nTransversions  Occurence number    Percentage')
+		print('A-C    %d     %f' %(mutations['A-C'], float(mutations['A-C'])/sum(mutations.values())))
+		print('A-T    %d     %f' %(mutations['A-T'], float(mutations['A-T'])/sum(mutations.values())))
+		print('C-G    %d     %f' %(mutations['C-G'], float(mutations['C-G'])/sum(mutations.values())))
+		print('G-T    %d     %f' %(mutations['G-T'], float(mutations['G-T'])/sum(mutations.values())))
+	else:
+		print('No mutations detected.')
 
 def test_arguments(args):
 	"""
