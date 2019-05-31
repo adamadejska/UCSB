@@ -24,7 +24,7 @@ import pysam
 import sys
 
 
-def find_saturation(bam, ref, start, end, chrom):
+def find_saturation(bam, ref, start, end, chrom, rs, re):
 	"""
 	Reads the BAM file and counts each base at a specific aligned position.
 	Compares those reads to the reference and calculates frequency of the SNPs at each
@@ -33,6 +33,8 @@ def find_saturation(bam, ref, start, end, chrom):
 	:param string ref: Reference file pathway.
 	:param int start: Start position.
 	:param int end: End position. 
+	:param float rs: Range start number.
+	:param float re: Range end number.
 	:return: a dictionary of mutations at each position.
 	"""
 
@@ -87,7 +89,7 @@ def find_saturation(bam, ref, start, end, chrom):
 	#mutations = calculate_fractions(mutations, fastafile)
 	
 	# No ref and collected non-ref mutations fractions apprach.
-	mutations, positions = calculate_fractions_overall(mutations, fastafile, chrom)
+	mutations, positions = calculate_fractions_overall(mutations, fastafile, chrom, re, rs)
 
 	fastafile.close()
 
@@ -124,12 +126,14 @@ def calculate_fractions(mutations, fastafile):
 	return mutations
 
 
-def calculate_fractions_overall(mutations, fastafile, chrom):
+def calculate_fractions_overall(mutations, fastafile, chrom, re, rs):
 	"""
 	Compares the mutations gathered from the BAM file to the reference FASTA file.
 	Compiles the fractions of mutations (not specific) vs overall number of reads.
 	:param dict mutations: Dictionary of mutations with positions as key.
 	:param file fastafile: Reference FASTA file object.
+	:param float rs: Range start number.
+	:param float re: Range end number.
 	:return: A newly compiled dictionary of mutations frequencies.
 	"""
 
@@ -168,7 +172,7 @@ def calculate_fractions_overall(mutations, fastafile, chrom):
 			continue
 
 		# Tell me the position of the mutation that had about 50% rate. 
-		if mutation_fraction > 0.35 and mutation_fraction < 0.6:
+		if mutation_fraction > rs/100 and mutation_fraction < re/100:
 			positions.append(position)
 
 			# Create a VCF file of the viable mutations.
@@ -286,6 +290,10 @@ def main():
 	parser.add_argument('-s', '--start', help='Start position', type=int)
 	parser.add_argument('-e', '--end', help='End position', type=int)
 	parser.add_argument('-chr', '--chromosome', help='Chromosome number', type=str)
+	parser.add_argument('-rs', '--range_s', help='Start of range of percentage of mutations.', 
+						type=float, default=35.0)
+	parser.add_argument('-re', '--range_e', help='End of range of percentage of mutations.', 
+						type=float, default=65.0)
 
 	args = parser.parse_args()
 
@@ -303,10 +311,11 @@ def main():
 		sys.exit('Error: End position exceeds the length of the chromosome.')
 
 	bam, ref, start, end, chrom = args.bamfile, args.reference, args.start, args.end, args.chromosome
-	
+	rs, re = args.range_s, args.range_e
+
 	# Compile mutation frequencies. Return the frequencies at all positions and positions
 	# 	of high frequency mutations.
-	mutations, positions = find_saturation(bam, ref, start, end, chrom)
+	mutations, positions = find_saturation(bam, ref, start, end, chrom, rs, re)
 
 	# Analyze the VCF file created from the saturation analysis.
 	vcf_analysis('viable_mutations_c_elegans.vcf')
