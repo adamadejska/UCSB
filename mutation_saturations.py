@@ -232,24 +232,13 @@ def vcf_analysis(vcf):
 	else:
 		print('No mutations detected.')
 
-def test_arguments(args):
+def test_files(args):
 	"""
 	Tests if the arguments specified are correct and can be used for the analysis.
+	Exits the program if they are not.
 	:param tuple args: Args object.
 	No return values.
 	"""
-
-	# Check for start position.
-	try:
-		start = int(args.start)
-	except:
-		sys.exit('Error: Start position not present or invalid.')
-
-	# Check for end position.
-	try:
-		end = int(args.end)
-	except:
-		sys.exit('Error: End position not present or invalid.')
 
 	# Check for bam file.
 	try:
@@ -276,9 +265,54 @@ def test_arguments(args):
 	except:
 		sys.exit('Error: Unable to open reference file.')
 
-	# Make sure the start is smaller than the end position
+
+def test_numerical_args(args):
+	"""
+	Tests if the numerical arguments specified are correct and can be used for the analysis.
+	Exits the program if they are not.
+	:param tuple args: Args object.
+	No return values.
+	"""
+
+	# Check for start position.
+	try:
+		start = int(args.start)
+	except:
+		sys.exit('Error: Start position not present or invalid.')
+
+	# Check for end position.
+	try:
+		end = int(args.end)
+	except:
+		sys.exit('Error: End position not present or invalid.')
+
+	# Make sure the start is smaller than the end position.
 	if args.start >= args.end:
 		sys.exit('Error: Invalid start and end positions specified.')
+
+	# Test if the start and end positions make sense in context of the chromosome length.
+	bam = pysam.AlignmentFile(args.bamfile, 'rb')
+	header = bam.header
+	for entry in (header['SQ']):
+		if entry['SN'] == args.chromosome:
+			length = entry['LN']
+
+	if args.end > length:
+		sys.exit('Error: End position exceeds the length of the chromosome.')
+
+	# Test if ranges are in the appropriate range.
+	try:
+		rs = float(args.range_s)
+	except:
+		sys.exit('Error: Range start number invalid.')
+
+	try:
+		re = float(args.range_e)
+	except:
+		sys.exit('Error: Range end number invalid.')
+
+	if args.range_s < 0 or args.range_e > 100:
+		sys.exit('Error: Range numbers invalid. Provide range between 0 and 100 %.')
 
 
 def main():
@@ -298,17 +332,8 @@ def main():
 	args = parser.parse_args()
 
 	# Make sure that user specified valid arguments. Close program if not.
-	test_arguments(args)
-
-	# Test if the start and end positions make sense in context of the chromosome length.
-	bam = pysam.AlignmentFile(args.bamfile, 'rb')
-	header = bam.header
-	for entry in (header['SQ']):
-		if entry['SN'] == args.chromosome:
-			length = entry['LN']
-
-	if args.end > length:
-		sys.exit('Error: End position exceeds the length of the chromosome.')
+	test_files(args)
+	test_numerical_args(args)
 
 	bam, ref, start, end, chrom = args.bamfile, args.reference, args.start, args.end, args.chromosome
 	rs, re = args.range_s, args.range_e
