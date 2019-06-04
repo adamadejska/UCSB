@@ -24,7 +24,7 @@ import pysam
 import sys
 
 
-def find_saturation(bam, ref, start, end, chrom, rs, re):
+def find_saturation(bam, ref, start, end, chrom, rs, re, output):
 	"""
 	Reads the BAM file and counts each base at a specific aligned position.
 	Compares those reads to the reference and calculates frequency of the SNPs at each
@@ -89,7 +89,7 @@ def find_saturation(bam, ref, start, end, chrom, rs, re):
 	#mutations = calculate_fractions(mutations, fastafile)
 	
 	# No ref and collected non-ref mutations fractions apprach.
-	mutations, positions = calculate_fractions_overall(mutations, fastafile, chrom, re, rs)
+	mutations, positions = calculate_fractions_overall(mutations, fastafile, chrom, re, rs, output)
 
 	fastafile.close()
 
@@ -126,7 +126,7 @@ def calculate_fractions(mutations, fastafile):
 	return mutations
 
 
-def calculate_fractions_overall(mutations, fastafile, chrom, re, rs):
+def calculate_fractions_overall(mutations, fastafile, chrom, re, rs, output):
 	"""
 	Compares the mutations gathered from the BAM file to the reference FASTA file.
 	Compiles the fractions of mutations (not specific) vs overall number of reads.
@@ -142,7 +142,7 @@ def calculate_fractions_overall(mutations, fastafile, chrom, re, rs):
 
 	# Create a VCF file of the positions with mutations so that it can be later used for VEP.
 	# VCF will also be used for statistical analysis of the mutations present.
-	f = open('viable_mutations_c_elegans.vcf', 'w')
+	f = open(output, 'w')
 	f.write('#CHROM 	POS 	ID 	REF 	ALT\n') 
 
 	# Calculate fractions and ignore reference nucleotide.
@@ -153,7 +153,7 @@ def calculate_fractions_overall(mutations, fastafile, chrom, re, rs):
 		muts = 0
 		all_reads = sum(nucleotides.values())
 
-		if all_reads < 100:
+		if all_reads < 60:
 			mutations[position] = 0.0
 			continue
 		depth += all_reads
@@ -328,6 +328,8 @@ def main():
 						type=float, default=35.0)
 	parser.add_argument('-re', '--range_e', help='End of range of percentage of mutations.', 
 						type=float, default=65.0)
+	parser.add_argument('-o', '--output', help='Output file name', type=str, 
+						default='viable_mutations.vcf')
 
 	args = parser.parse_args()
 
@@ -336,14 +338,14 @@ def main():
 	test_numerical_args(args)
 
 	bam, ref, start, end, chrom = args.bamfile, args.reference, args.start, args.end, args.chromosome
-	rs, re = args.range_s, args.range_e
+	rs, re, output = args.range_s, args.range_e, args.output
 
 	# Compile mutation frequencies. Return the frequencies at all positions and positions
 	# 	of high frequency mutations.
-	mutations, positions = find_saturation(bam, ref, start, end, chrom, rs, re)
+	mutations, positions = find_saturation(bam, ref, start, end, chrom, rs, re, output)
 
 	# Analyze the VCF file created from the saturation analysis.
-	vcf_analysis('viable_mutations_c_elegans.vcf')
+	vcf_analysis(output)
 
 
 	overall_mutants = True
